@@ -1,0 +1,22 @@
+FROM ubuntu:24.04
+
+# Instalación de paquetes de Ubuntu
+RUN apt update
+RUN apt install --no-install-recommends -y python3-pip libgl1 libglib2.0-0
+# para poder manejar instalaciones con pip, porque en apt no encontramos ultralytics
+RUN rm -f /usr/lib/python3*/EXTERNALLY-MANAGED
+
+# Instalación de modulos de python para YOLO
+# especifico para correr sin GPU
+RUN pip install --no-cache torch torchvision --index-url https://download.pytorch.org/whl/cpu
+# yolo en sí mismo
+RUN pip install --no-cache ultralytics
+
+# Instalación del modelo YOLO
+COPY ./models/yolov8l.pt /usr/src/app/
+
+# Configuración de YOLO
+# fija el modelo yolov8l
+RUN sed -i "s,model:,model: /usr/src/app/yolov8l.pt," /usr/local/lib/python3*/dist-packages/ultralytics/cfg/default.yaml
+# cambia el directorio donde se guardan las imagenes, por ahora no vamos a usar las imagenes generadas
+RUN echo save_dir: /usr/src/app >> /usr/local/lib/python3.12/dist-packages/ultralytics/cfg/default.yaml
