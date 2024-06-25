@@ -20,7 +20,10 @@ de **todos** los integrantes y debe ejecutarse dentro del contenedor.
 ### Pautas generales
 
 * El trabajo práctico deberá ser realizado en grupos de dos.
-* Deberán crear un fork de este proyecto desde una de sus cuentas de gitlab y compartirlo con el otro integrante del grupo con permiso owner y con permiso reporter a anamurinigo@fceia.unr.edu.ar,  aleoncavallo@gmail.com y gbocchio@gmail.com. 
+* Deberán crear un fork de este proyecto desde una de sus cuentas de gitlab y
+compartirlo con el otro integrante del grupo con permiso owner y con permiso
+reporter a hgonzalez.234@gmail.com,  ariel.dalessandro@gmail.com,
+alvarezarnesi@gmail.com y nicolasdimarc@gmail.com.
 * Todos los integrantes deben conocer todos los aspectos del trabajo entregado.
 * Se admite una única entrega final, es por ello que solicitamos revisen muy
 bien las funcionalidades previamente a la entrega formal.
