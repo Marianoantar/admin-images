@@ -19,7 +19,7 @@ de **todos** los integrantes y debe ejecutarse dentro del contenedor.
 
 ### Pautas generales
 
-* El trabajo práctico deberá ser realizado en grupos de dos.
+* El trabajo práctico deberá ser realizado en grupos de dos o tres integrantes.
 * Deberán crear un fork de este proyecto desde una de sus cuentas de gitlab y
 compartirlo con el otro integrante del grupo con permiso owner y con permiso
 reporter a hgonzalez.234@gmail.com,  ariel.dalessandro@gmail.com,
