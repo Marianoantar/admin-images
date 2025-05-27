@@ -34,6 +34,10 @@ Para poder utilizar el programa primero debe construir el contendor:
 ```bash
 docker buildx build -t entorno .
 ```
+o
+```bash
+docker build -t entorno .
+```
 
 Luego puede ejecutarse el contenedor con el siguiente comando:
 ```bash
