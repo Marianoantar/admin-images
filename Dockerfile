@@ -40,7 +40,7 @@ COPY ./models/yolov8l.pt /usr/src/app/
 # fija el modelo yolov8l
 RUN sed -i "s,model:,model: /usr/src/app/yolov8l.pt," /usr/local/lib/python3*/dist-packages/ultralytics/cfg/default.yaml
 # cambia el directorio donde se guardan las imagenes, por ahora no vamos a usar las imagenes generadas
-RUN echo save_dir: /usr/src/app >> /usr/local/lib/python3.12/dist-packages/ultralytics/cfg/default.yaml
+RUN echo save_dir: /usr/src/app >> /usr/local/lib/python3.9/dist-packages/ultralytics/cfg/default.yaml
 # Instalar los programas necesarios
 
 
