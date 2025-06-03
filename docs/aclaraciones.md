@@ -92,12 +92,12 @@ $ cat etiquetas.json | jq
 }
 ```
 
-En este primer ejemplo trivial, recibe un archivp de entrada `etiqutas.json`, verifica si es válido
+En este primer ejemplo trivial, recibe un archivo de entrada `etiqutas.json`, verifica si es válido
 y nos lo muestra bien formateado por la terminal.
 
 Si queremos agregar una nueva etiqueta, podríamos hacer:
 ```
-$ cat etiquetas.json | jq '.cat += ["imagenes/ejemplo"]'
+$ cat etiquetas.json | jq '.duck += ["imagenes/ejemplo"]'
 {
   "person": [
     "imagenes/imagen1.jpg",
@@ -107,13 +107,13 @@ $ cat etiquetas.json | jq '.cat += ["imagenes/ejemplo"]'
     "imagenes/imagen1.jpg",
     "imagenes/imagen3.jpg"
   ],
-  "cat": [
+  "duck": [
     "imagenes/ejemplo"
   ]
 }
 ```
 
-En este caso, se crea una nueva etiqueta `cat` y una lista de rutas de imágenes que contienen gatos. Prestar
+En este caso, se crea una nueva etiqueta `duck` y una lista de rutas de imágenes que contienen gatos. Prestar
 especial atención a los corchetes `[]` que se encuentran en `["imagenes/ejemplo"]`, ya que estos determinan
 que es una lista de rutas lo que corresponde a la etiqueta `cat`.
 
