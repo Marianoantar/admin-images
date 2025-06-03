@@ -10,8 +10,6 @@ PS3="Elija una opción: "
 select OPCION in "Descargar imágenes."      \
                  "Etiquetar imágenes."      \
                  "Mostrar imágenes."        \
-                 "Comprimir imágenes."      \
-                 "Listar imágenes."         \
                  "Informacion del sistema." \
                  "Salir."
 do
@@ -19,10 +17,8 @@ do
         1) (cd $IMAGESDIR && $SOURCEDIR/menu/descargar.sh) ;;
         2) (cd $IMAGESDIR && $SOURCEDIR/scripts/etiquetar.sh) ;;
         3) (cd $IMAGESDIR && $SOURCEDIR/scripts/mostrar.sh) ;;
-        4) (cd $IMAGESDIR && $SOURCEDIR/scripts/comprimir.sh) ;;
-        5) (cd $IMAGESDIR && $SOURCEDIR/menu/listar.sh) ;;
-        6) $SOURCEDIR/menu/info.sh ;;
-        7) exit 0 ;;
+        4) $SOURCEDIR/menu/info.sh ;;
+        5) exit 0 ;;
         *) echo Opción incorrecta.
     esac
 
