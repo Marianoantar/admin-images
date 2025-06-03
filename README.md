@@ -1,4 +1,4 @@
-# Trabajo Práctico de Entorno de Programación (2024)
+# Trabajo Práctico de Entorno de Programación (2025)
 
 Este repositorio es un trabajo práctico para la materia "Entorno de
 Programación" de la carrera T.U.I.A. en F.C.E.I.A. (U.N.R.).
