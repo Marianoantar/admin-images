@@ -100,7 +100,7 @@ yolo predict source=/ruta/archivo.jpg
 Moondream es un modelo de I.A. Que puede utilizarse para describir imágenes. Dentro
 del contendedor puede utilizarse con el siguiente comando:
 ```bash
-ollama run moondream "Describe me this image." /ruta/archivo.jpg
+ollama run moondream "{'content': 'Describe me this image', 'images': '/imagenes/imagen1.jpg'}"
 ```
 
 
