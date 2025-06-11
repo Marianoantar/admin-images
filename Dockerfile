@@ -57,8 +57,8 @@ RUN ollama serve & \
 
 
 # Configuracion de la aplicación
-ENV TERM=xterm
-ENV COLORTERM=24bit
+ENV TERM xterm
+ENV COLORTERM 24bit
 COPY ["src/", "/app/"]
 WORKDIR /app
 ENTRYPOINT ["/app/main.sh"]
