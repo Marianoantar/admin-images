@@ -51,5 +51,6 @@ Tambien puede correrse el programa fuera del contenedor:
 
 ## Integrantes
 
-* Integrante 1.
-* Integrante 2.
+* Ayax Garcia Williner
+* Leonardo Prone
+* Mariano Tardugno
