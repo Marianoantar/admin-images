@@ -48,6 +48,11 @@ Tambien puede correrse el programa fuera del contenedor:
 ```bash
 ./src/main.sh
 ```
+#### EJECUCION luego del cambio en el Dockerfile
+```bash
+docker run -it -v "$(pwd):/app" -v "$(pwd)/imagenes:/imagenes" entorno
+```
+
 
 ## Integrantes
 

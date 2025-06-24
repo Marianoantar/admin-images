@@ -61,4 +61,5 @@ ENV TERM xterm
 ENV COLORTERM 24bit
 COPY ["src/", "/app/"]
 WORKDIR /app
-ENTRYPOINT ["/app/main.sh"]
+# ENTRYPOINT ["/app/main.sh"]
+ENTRYPOINT ["/app/src/main.sh"] 
