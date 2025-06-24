@@ -50,7 +50,7 @@ Tambien puede correrse el programa fuera del contenedor:
 ```
 #### EJECUCION luego del cambio en el Dockerfile
 ```bash
-docker run -it -v "$(pwd):/app" -v "$(pwd)/imagenes:/imagenes" entorno
+docker run -it -v ./imagenes/:/imagenes -v ./src/:/app entorno
 ```
 
 
