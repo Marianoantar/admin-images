@@ -53,7 +53,14 @@ RUN ollama serve & \
     ollama pull moondream && \
     pkill ollama
 
+
+# =================================================
 # Instalar los programas necesarios
+
+#--------------------------------------------------
+# Agrego Ping para verificar la conectividad de red
+RUN apt-get update && apt-get install -y iputils-ping 
+#--------------------------------------------------
 
 
 # Configuracion de la aplicación
