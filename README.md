@@ -6,7 +6,8 @@
 + Prone, Leonardo
 
 Este proyecto es una aplicación en Bash que permite analizar imágenes utilizando un modelo de detección de objetos (YOLOv8) y generar descripciones usando un modelo multimodal (Moondream vía Ollama). Se construye como contenedor Docker y no requiere instalaciones adicionales en el host.
-
+ 
+ 
 ## Ejecución del proyecto:
 
 1. Clonar el repositorio:
