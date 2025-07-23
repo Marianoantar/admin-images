@@ -21,16 +21,27 @@ RUN apt-get update && \
 
 
 # Instalar Python 3.9 desde PPA y configurarlo como predeterminado
+# NOTA: Quité python3-pip de esta línea para manejarlo con get-pip.py
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update && \
     apt-get install -y --no-install-recommends \
-        python3.9 python3.9-dev python3.9-distutils python3-pip && \
+        python3.9 python3.9-dev python3.9-distutils && \
     rm -rf /var/lib/apt/lists/*
 
+# Configurar alternativas para python3
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
 
+# *** NUEVA LINEA AQUI: Desinstalar cualquier pip residual de apt si existiera ***
+# Esto es una medida de seguridad, ya que no lo instalamos arriba, pero por si acaso.
+RUN apt-get remove -y python3-pip || true && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
+
 # Instalar paquetes de Python
-RUN python3 -m pip install --upgrade pip && \
+# Ahora instalamos pip con get-pip.py sin conflictos
+RUN wget -q -O get-pip.py https://bootstrap.pypa.io/get-pip.py && \
+    python3 get-pip.py && \
+    rm get-pip.py && \
     python3 -m pip install --no-cache-dir \
         torch==2.1.2+cpu \
         torchvision==0.16.2+cpu \
@@ -70,9 +81,9 @@ COPY ./imagenes/ /imagenes/
 # Punto de entrada
 #ENTRYPOINT ["/usr/src/app/main.sh"]
 
-# Copiar el script de arranque 
+# Copiar el script de arranque
 COPY ./start.sh /usr/src/app/start.sh
 RUN chmod +x /usr/src/app/start.sh
 
-# Usar el nuevo script como punto de entrada 
+# Usar el nuevo script como punto de entrada
 ENTRYPOINT ["/usr/src/app/start.sh"]
