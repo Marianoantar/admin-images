@@ -19,62 +19,92 @@ if [[ ${#IMAGENES[@]} -eq 0 ]]; then
     exit 1
 fi
 
-CLASES=(person bicycle car motorcycle airplane bus train truck boat traffic_light fire_hydrant stop_sign parking_meter bench bird cat dog horse sheep cow elephant bear zebra giraffe backpack umbrella handbag tie suitcase frisbee skis snowboard sports_ball kite baseball_bat baseball_glove skateboard surfboard tennis_racket bottle wine_glass cup fork knife spoon bowl banana apple sandwich orange broccoli carrot hot_dog pizza donut cake chair couch potted_plant bed dining_table toilet tv laptop mouse remote keyboard cell_phone microwave oven toaster sink refrigerator book clock vase scissors teddy_bear hair_drier toothbrush)
-
 echo "🔧 SOURCEDIR: $SOURCEDIR"
-mkdir -p "$SOURCEDIR/tmp_results/test_creacion" || echo " No se pudo crear tmp_results"
+# Crear la carpeta donde YOLO guardará las imágenes procesadas (si save=True está activo)
+mkdir -p "$SOURCEDIR/runs" || echo " No se pudo crear $SOURCEDIR/runs"
+
+if ! command -v yolo &>/dev/null; then
+    echo "Error: comando 'yolo' no encontrado."
+    exit 1
+fi
 
 for IMG in "${IMAGENES[@]}"; do
     echo
     echo "Analizando $IMG"
 
-    if ! command -v yolo &>/dev/null; then
-        echo "Error: comando 'yolo' no encontrado."
-        continue
-    fi
-
-    yolo detect predict model=/usr/src/app/models/yolov8l.pt \
-        source="$IMG" save_txt=True \
-        project="$SOURCEDIR/tmp_results" \
-        name=etiquetas exist_ok=True \
-        imgsz=640 conf=0.1
-
     NOMBRE_IMG=$(basename "$IMG")
     RUTA_RELATIVA="imagenes/$NOMBRE_IMG"
-    LABEL_PATH="$SOURCEDIR/tmp_results/etiquetas/labels/${NOMBRE_IMG%.*}.txt"
+    ETIQ_PRINCIPAL="no_detections" # Valor por defecto si no se detecta nada
 
-    if [[ -f "$LABEL_PATH" ]]; then
-        ID=$(head -n 1 "$LABEL_PATH" | cut -d' ' -f1)
-        ETIQ="${CLASES[$ID]}"
-    else
-        ETIQ="no_detections"
+    # --- CAMBIO CRÍTICO AQUÍ: ELIMINAMOS verbose=False ---
+    # Queremos que YOLO imprima la línea de detección en stdout.
+    YOLO_OUTPUT=$(yolo predict model=/usr/src/app/models/yolov8l.pt \
+        source="$IMG" save=True \
+        imgsz=640 conf=0.1 2>&1) # Capturamos stdout y stderr para el análisis
+
+    # Depuración: Mostrar la salida completa de YOLO
+    echo "Salida COMPLETA de YOLO para $NOMBRE_IMG (¡revisar esta sección cuidadosamente!):"
+    echo "$YOLO_OUTPUT"
+    echo "--- FIN de Salida COMPLETA de YOLO ---"
+
+    # Extraer la línea que contiene las detecciones o "(no detections)"
+    # Ahora que esperamos que la línea aparezca, el grep debería encontrarla.
+    DETECTION_LINE=$(echo "$YOLO_OUTPUT" | grep -E "^image 1/1 " | head -n 1) # Aseguramos que empiece la línea
+
+
+    echo "Línea de detección capturada (después de grep): '$DETECTION_LINE'" # Depuración
+
+    if [[ "$DETECTION_LINE" == *"(no detections)"* ]]; then
+        ETIQ_PRINCIPAL="no_detections"
+    elif [[ -n "$DETECTION_LINE" ]]; then
+        # Paso 1: Limpiar la línea de detección para quedarnos solo con las etiquetas.
+        # Elimina todo antes de "X Y objects," y después del último ", tiempo_ms"
+        CLEAN_DETECTIONS=$(echo "$DETECTION_LINE" | sed -E 's/.*: [0-9]+x[0-9]+ ([^,]+(,[^,]+)*), [0-9.]+ms/\1/')
+        
+        # Fallback si sed no extrae correctamente o la línea es diferente
+        if [[ -z "$CLEAN_DETECTIONS" || "$CLEAN_DETECTIONS" == *":"* ]]; then
+             CLEAN_DETECTIONS=$(echo "$DETECTION_LINE" | sed -E 's/.*: [0-9]+x[0-9]+ (.*), [0-9.]+ms/\1/' | sed 's/ (no detections)//g' | sed 's/^\s*//')
+        fi
+
+        echo "Detecciones limpias: '$CLEAN_DETECTIONS'" # Depuración
+
+        # Paso 2: Extraer la primera etiqueta del texto limpio
+        FIRST_DETECTION_COUNTED=$(echo "$CLEAN_DETECTIONS" | grep -oE '[0-9]+ ([a-zA-Z ]+)' | head -n 1)
+
+        if [[ -n "$FIRST_DETECTION_COUNTED" ]]; then
+            # Quitar el número y el espacio iniciales
+            ETIQ_PRINCIPAL=$(echo "$FIRST_DETECTION_COUNTED" | sed -E 's/^[0-9]+\s+//' | sed 's/\s+$//')
+        fi
     fi
 
-    # Actualizar etiquetas.json
-    jq -n --arg e "$ETIQ" --arg img "$RUTA_RELATIVA" '{($e): [$img]}' > "$SOURCEDIR/tmp_uno.json"
+    echo "Etiqueta principal detectada: $ETIQ_PRINCIPAL"
 
-    jq -s 'reduce .[] as $item ({}; 
-        reduce ($item | to_entries[]) as $kv (.;
-            .[$kv.key] = ((.[$kv.key] + $kv.value) // $kv.value | unique)))' \
-        "$ETIQUETAS_JSON" "$SOURCEDIR/tmp_uno.json" > "${ETIQUETAS_JSON}.tmp" \
-        && mv "${ETIQUETAS_JSON}.tmp" "$ETIQUETAS_JSON" \
-        && rm "$SOURCEDIR/tmp_uno.json"
+    # Actualizar etiquetas.json
+    jq --arg e "$ETIQ_PRINCIPAL" --arg img "$RUTA_RELATIVA" '
+    if .[$e] then
+        .[$e] += [$img] | unique
+    else
+        .[$e] = [$img]
+    end
+    ' "$ETIQUETAS_JSON" > "${ETIQUETAS_JSON}.tmp" \
+    && mv "${ETIQUETAS_JSON}.tmp" "$ETIQUETAS_JSON"
 
     # Obtener descripción con Moondream (si está disponible)
     if command -v ollama &>/dev/null; then
         echo "Ejecutando Moondream para: $NOMBRE_IMG"
-        DESCRIPCION=$(ollama run moondream "$IMG describe this image" 2>/dev/null)
+        DESCRIPCION=$(ollama run moondream "Describe me this image." "$(realpath "$IMG")" 2>/dev/null)
 
         echo "Descripción generada:"
         echo "$DESCRIPCION"
 
-        if [[ -n "$DESCRIPCION" && "$DESCRIPCION" != "null" ]]; then
-            jq --arg nombre "$NOMBRE_IMG" --arg texto "$DESCRIPCION" \
+        if [[ -n "$DESCRIPCION" && "$DESCRIPCION" != "null" && "$DESCRIPCION" != *"error"* && "$DESCRIPCION" != *"failed to get image from"* ]]; then
+            CLEAN_DESCRIPCION=$(echo "$DESCRIPCION" | tr '\n' ' ' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            jq --arg nombre "$NOMBRE_IMG" --arg texto "$CLEAN_DESCRIPCION" \
                 '.[$nombre] = $texto' "$IMAGENES_JSON" > "${IMAGENES_JSON}.tmp" \
                 && mv "${IMAGENES_JSON}.tmp" "$IMAGENES_JSON"
             echo "Descripción guardada en $IMAGENES_JSON"
         else
-            echo "No se generó descripción para $NOMBRE_IMG"
+            echo "No se generó descripción para $NOMBRE_IMG o hubo un error con Moondream."
         fi
     else
         echo "Moondream (ollama) no está disponible. Saltando descripción."
