@@ -28,19 +28,35 @@ if ! command -v yolo &>/dev/null; then
     exit 1
 fi
 
-for IMG in "${IMAGENES[@]}"; do
-    echo
-    echo "Analizando $IMG"
+# Exportar ULTRALYTICS_PRINTER para asegurar la salida de YOLO
+export ULTRALYTICS_PRINTER=True
 
+for IMG in "${IMAGENES[@]}"; do
     NOMBRE_IMG=$(basename "$IMG")
-    RUTA_RELATIVA="imagenes/$NOMBRE_IMG"
+    RUTA_RELATIVA="imagenes/$NOMBRE_IMG" # Ejemplo: imagenes/foto.jpg
+
+    # --- NUEVA LÓGICA: SALTAR IMÁGENES YA ETIQUETADAS USANDO GREP ---
+    echo
+    echo "Verificando $NOMBRE_IMG..."
+    
+    # Buscamos la ruta relativa de la imagen en etiquetas.json
+    # Y el nombre del archivo en imagenes.json (clave del JSON)
+    if grep -q "$RUTA_RELATIVA" "$ETIQUETAS_JSON" || grep -q "\"$NOMBRE_IMG\":" "$IMAGENES_JSON"; then
+        echo "✅ Imagen $NOMBRE_IMG ya procesada. Saltando..."
+        continue # Pasa a la siguiente imagen en el bucle
+    else
+        echo "⏳ Imagen $NOMBRE_IMG aún no procesada. Procesando..."
+    fi
+    # --- FIN DE NUEVA LÓGICA ---
+
     ETIQ_PRINCIPAL="no_detections" # Valor por defecto si no se detecta nada
 
-    # --- CAMBIO CRÍTICO AQUÍ: ELIMINAMOS verbose=False ---
-    # Queremos que YOLO imprima la línea de detección en stdout.
+    echo "Analizando $IMG"
+
+    # Ejecutar YOLO y capturar la salida.
     YOLO_OUTPUT=$(yolo predict model=/usr/src/app/models/yolov8l.pt \
         source="$IMG" save=True \
-        imgsz=640 conf=0.1 2>&1) # Capturamos stdout y stderr para el análisis
+        imgsz=640 conf=0.1 2>&1) # Capturamos stdout y stderr
 
     # Depuración: Mostrar la salida completa de YOLO
     echo "Salida COMPLETA de YOLO para $NOMBRE_IMG (¡revisar esta sección cuidadosamente!):"
@@ -48,8 +64,7 @@ for IMG in "${IMAGENES[@]}"; do
     echo "--- FIN de Salida COMPLETA de YOLO ---"
 
     # Extraer la línea que contiene las detecciones o "(no detections)"
-    # Ahora que esperamos que la línea aparezca, el grep debería encontrarla.
-    DETECTION_LINE=$(echo "$YOLO_OUTPUT" | grep -E "^image 1/1 " | head -n 1) # Aseguramos que empiece la línea
+    DETECTION_LINE=$(echo "$YOLO_OUTPUT" | grep -E "^image 1/1 " | head -n 1)
 
 
     echo "Línea de detección capturada (después de grep): '$DETECTION_LINE'" # Depuración
@@ -58,7 +73,6 @@ for IMG in "${IMAGENES[@]}"; do
         ETIQ_PRINCIPAL="no_detections"
     elif [[ -n "$DETECTION_LINE" ]]; then
         # Paso 1: Limpiar la línea de detección para quedarnos solo con las etiquetas.
-        # Elimina todo antes de "X Y objects," y después del último ", tiempo_ms"
         CLEAN_DETECTIONS=$(echo "$DETECTION_LINE" | sed -E 's/.*: [0-9]+x[0-9]+ ([^,]+(,[^,]+)*), [0-9.]+ms/\1/')
         
         # Fallback si sed no extrae correctamente o la línea es diferente
