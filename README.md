@@ -1,45 +1,60 @@
-# TP Entorno 2025 — Sistema de Análisis de Imágenes con IA
+# Trabajo Práctico de Entorno de Programación (2025)
 
-## Integrantes:
+El trabajo práctico consiste en desarrollar un sistema automatizado que descargue, clasifique y etiquete imágenes usando scripts en Bash, procesamiento con **YOLO** para detección de objetos, y **Moondream** para generación de las descripciones. Integrando todo en un entorno Dockerizado con control de versiones mediante Git.
+
+Aquí puede leerse el [enunciado](docs/enunciado.md) del trabajo.
+
+## Instrucciones
+
+Clone el repositorio
+
+```bash
+   git clone https://gitlab.com/agarciawilliner/tpentorno2025.git
+   cd tpentorno2025
+```
+### Dependencias
+
+Es necesario tener instalados `docker` y `docker buildx` para poder ejecutar
+este programa. En distribuciones basadas en Ubuntu esto puede conseguirse así:
+```bash
+sudo apt update
+sudo apt install docker.io docker-buildx
+```
+
+Luego será necesario habilitar el servicio de contenedores de docker:
+```bash
+sudo systemctl enable docker
+sudo systemctl start docker
+```
+
+También puede ser de utilidad agregar al usuario actual al grupo `docker`:
+```bash
+sudo usermod -aG docker $USER
+```
+Para que este cambio surja efecto, es necesario reiniciar la sesión.
+
+### Ejecución
+
+Para poder utilizar el programa primero debe construir el contendor:
+```bash
+docker buildx build -t entorno .
+```
+o
+```bash
+docker build -t entorno .
+```
+
+Luego puede ejecutarse el contenedor con el siguiente comando:
+```bash
+docker run -it entorno
+```
+
+Tambien puede correrse el programa fuera del contenedor:
+```bash
+./src/main.sh
+```
+
+## Integrantes
 + Tardugno, Mariano
 + Garcia Williner, Ayax
 + Prone, Leonardo
-
-Este proyecto es una aplicación en Bash que permite analizar imágenes utilizando un modelo de detección de objetos (YOLOv8) y generar descripciones usando un modelo multimodal (Moondream vía Ollama). Se construye como contenedor Docker y no requiere instalaciones adicionales en el host.
- 
- 
-## Ejecución del proyecto:
-
-1. Clonar el repositorio:
-
-```bash
-git clone https://gitlab.com/agarciawilliner/tpentorno2025
-cd tpentorno2025
-
-
-2. Construir la imagen localmente:
-
-docker build -t entorno .
-
-3. Ejecutar la aplicación:
-
-docker run -it entorno
-
-### Esto inicia el menú principal desde main.sh, donde podrá:
-
-+ Descargar imágenes
-
-+ Analizar las imágenes, generar etiquetas con YOLOv8 y describir las imágenes con Moondream
-
-+ Ver las imágenes y descripciones en consola
-
-+ Generar un resumen con estadísticas de las imágenes descargadas por etiqueta
-
-
-
-## Requisitos técnicos:
-
-+ Tener Docker instalado en el sistema (necesario tanto para construir como para ejecutar el proyecto)
-
-+ Contar con conexión a internet la primera vez que se construye la imagen, ya que se descargará el modelo Moondream mediante Ollama. Nota: el modelo YOLOv8 ya está incluido dentro del repositorio y no requiere descarga adicional.
-
