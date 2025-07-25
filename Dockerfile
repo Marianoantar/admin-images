@@ -96,8 +96,8 @@ RUN mkdir -p /imagenes
 COPY ./imagenes/ /imagenes/
 
 # Copiar el script de arranque y darle permisos de ejecución
-COPY ./start.sh /usr/src/app/start.sh
-RUN chmod +x /usr/src/app/start.sh
+#COPY ./start.sh /usr/src/app/start.sh
+#RUN chmod +x /usr/src/app/start.sh
 
 # El ENTRYPOINT apunta a un script que está dentro de /usr/src/app
-ENTRYPOINT ["/usr/src/app/start.sh"]
+ENTRYPOINT ["/usr/src/app/main.sh"]

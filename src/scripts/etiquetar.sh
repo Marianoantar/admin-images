@@ -10,16 +10,18 @@ DIRECTORIO="${1:-$IMAGESDIR}"
 [ ! -f "$ETIQUETAS_JSON" ] && echo '{}' > "$ETIQUETAS_JSON"
 [ ! -f "$IMAGENES_JSON" ] && echo '{}' > "$IMAGENES_JSON"
 
-shopt -s nullglob
+shopt -s nullglob # Setea nullglob: si no hay arhc .jpg IMAGENES queda vacía
 IMAGENES=("$DIRECTORIO"/*.jpg)
-shopt -u nullglob
+shopt -u nullglob # Desactiva nullglob
 
-if [[ ${#IMAGENES[@]} -eq 0 ]]; then
+# ${#IMAGENES[@]}} es la cantidad de elementos(archivos) 
+# que tiene el array IMAGENES
+if [[ ${#IMAGENES[@]} -eq 0 ]]; then 
     echo " No se encontraron imágenes JPG en $DIRECTORIO"
     exit 1
 fi
 
-echo "🔧 SOURCEDIR: $SOURCEDIR"
+# echo "🔧 SOURCEDIR: $SOURCEDIR"
 # Crear la carpeta donde YOLO guardará las imágenes procesadas (si save=True está activo)
 mkdir -p "$SOURCEDIR/runs" || echo " No se pudo crear $SOURCEDIR/runs"
 
@@ -29,7 +31,7 @@ if ! command -v yolo &>/dev/null; then
 fi
 
 # Exportar ULTRALYTICS_PRINTER para asegurar la salida de YOLO
-export ULTRALYTICS_PRINTER=True
+#export ULTRALYTICS_PRINTER=True
 
 for IMG in "${IMAGENES[@]}"; do
     NOMBRE_IMG=$(basename "$IMG")
@@ -37,21 +39,22 @@ for IMG in "${IMAGENES[@]}"; do
 
     # --- NUEVA LÓGICA: SALTAR IMÁGENES YA ETIQUETADAS USANDO GREP ---
     echo
-    echo "Verificando $NOMBRE_IMG..."
+    echo "⏳Verificando $NOMBRE_IMG..."
     
     # Buscamos la ruta relativa de la imagen en etiquetas.json
     # Y el nombre del archivo en imagenes.json (clave del JSON)
     if grep -q "$RUTA_RELATIVA" "$ETIQUETAS_JSON" || grep -q "\"$NOMBRE_IMG\":" "$IMAGENES_JSON"; then
+        echo "************************************************"
         echo "✅ Imagen $NOMBRE_IMG ya procesada. Saltando..."
+        echo "************************************************"
         continue # Pasa a la siguiente imagen en el bucle
     else
-        echo "⏳ Imagen $NOMBRE_IMG aún no procesada. Procesando..."
+        echo "Imagen aún no procesada."
+        echo "⏳ Procesando..."
     fi
     # --- FIN DE NUEVA LÓGICA ---
 
     ETIQ_PRINCIPAL="no_detections" # Valor por defecto si no se detecta nada
-
-    echo "Analizando $IMG"
 
     # Ejecutar YOLO y capturar la salida.
     YOLO_OUTPUT=$(yolo predict model=/usr/src/app/models/yolov8l.pt \
@@ -59,15 +62,16 @@ for IMG in "${IMAGENES[@]}"; do
         imgsz=640 conf=0.1 2>&1) # Capturamos stdout y stderr
 
     # Depuración: Mostrar la salida completa de YOLO
-    echo "Salida COMPLETA de YOLO para $NOMBRE_IMG (¡revisar esta sección cuidadosamente!):"
-    echo "$YOLO_OUTPUT"
+    # echo "Salida COMPLETA de YOLO " # para $NOMBRE_IMG (¡revisar esta sección cuidadosamente!):"
+    echo
     echo "--- FIN de Salida COMPLETA de YOLO ---"
+    echo "--------------------------------------"
 
     # Extraer la línea que contiene las detecciones o "(no detections)"
     DETECTION_LINE=$(echo "$YOLO_OUTPUT" | grep -E "^image 1/1 " | head -n 1)
 
-
-    echo "Línea de detección capturada (después de grep): '$DETECTION_LINE'" # Depuración
+    # Depuración
+    # echo "Línea de detección capturada (después de grep): '$DETECTION_LINE'" 
 
     if [[ "$DETECTION_LINE" == *"(no detections)"* ]]; then
         ETIQ_PRINCIPAL="no_detections"
@@ -90,26 +94,36 @@ for IMG in "${IMAGENES[@]}"; do
             ETIQ_PRINCIPAL=$(echo "$FIRST_DETECTION_COUNTED" | sed -E 's/^[0-9]+\s+//' | sed 's/\s+$//')
         fi
     fi
-
+    echo
+    echo "*********************************************"
     echo "Etiqueta principal detectada: $ETIQ_PRINCIPAL"
+    echo "*********************************************"
+    echo
 
     # Actualizar etiquetas.json
     jq --arg e "$ETIQ_PRINCIPAL" --arg img "$RUTA_RELATIVA" '
+
     if .[$e] then
         .[$e] += [$img] | unique
     else
         .[$e] = [$img]
     end
+
     ' "$ETIQUETAS_JSON" > "${ETIQUETAS_JSON}.tmp" \
     && mv "${ETIQUETAS_JSON}.tmp" "$ETIQUETAS_JSON"
 
     # Obtener descripción con Moondream (si está disponible)
     if command -v ollama &>/dev/null; then
-        echo "Ejecutando Moondream para: $NOMBRE_IMG"
+        echo "-------------------------------------------"
+        echo "Ejecutando Moondream"
+        echo "para: $NOMBRE_IMG"
+        echo
         DESCRIPCION=$(ollama run moondream "Describe me this image." "$(realpath "$IMG")" 2>/dev/null)
 
+        echo "************************"
         echo "Descripción generada:"
         echo "$DESCRIPCION"
+        echo
 
         if [[ -n "$DESCRIPCION" && "$DESCRIPCION" != "null" && "$DESCRIPCION" != *"error"* && "$DESCRIPCION" != *"failed to get image from"* ]]; then
             CLEAN_DESCRIPCION=$(echo "$DESCRIPCION" | tr '\n' ' ' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
@@ -120,15 +134,16 @@ for IMG in "${IMAGENES[@]}"; do
         else
             echo "No se generó descripción para $NOMBRE_IMG o hubo un error con Moondream."
         fi
+        echo "************************"
     else
         echo "Moondream (ollama) no está disponible. Saltando descripción."
     fi
 
 done
 
-echo
-echo "Resumen de etiquetas principales:"
-jq -r 'to_entries[] | "\(.key): \(.value | length) imagen(es)"' "$ETIQUETAS_JSON" | sort
+#echo
+#echo "Resumen de etiquetas principales:"
+#jq -r 'to_entries[] | "\(.key): \(.value | length) imagen(es)"' "$ETIQUETAS_JSON" | sort
 
 echo
 echo "Proceso completado. JSONs generados correctamente."
