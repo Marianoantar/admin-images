@@ -14,7 +14,7 @@ shopt -s nullglob # Setea nullglob: si no hay arhc .jpg IMAGENES queda vacía
 IMAGENES=("$DIRECTORIO"/*.jpg)
 shopt -u nullglob # Desactiva nullglob
 
-# ${#IMAGENES[@]}} es la cantidad de elementos(archivos) 
+# ${#IMAGENES[@]}} Son todos los elementos(archivos) 
 # que tiene el array IMAGENES
 if [[ ${#IMAGENES[@]} -eq 0 ]]; then 
     echo " No se encontraron imágenes JPG en $DIRECTORIO"
@@ -29,9 +29,6 @@ if ! command -v yolo &>/dev/null; then
     echo "Error: comando 'yolo' no encontrado."
     exit 1
 fi
-
-# Exportar ULTRALYTICS_PRINTER para asegurar la salida de YOLO
-#export ULTRALYTICS_PRINTER=True
 
 for IMG in "${IMAGENES[@]}"; do
     NOMBRE_IMG=$(basename "$IMG")
@@ -62,7 +59,7 @@ for IMG in "${IMAGENES[@]}"; do
         imgsz=640 conf=0.1 2>&1) # Capturamos stdout y stderr
 
     # Depuración: Mostrar la salida completa de YOLO
-    # echo "Salida COMPLETA de YOLO " # para $NOMBRE_IMG (¡revisar esta sección cuidadosamente!):"
+    # echo "Salida COMPLETA de YOLO " # para $NOMBRE_IMG "
     echo
     echo "--- FIN de Salida COMPLETA de YOLO ---"
     echo "--------------------------------------"
@@ -141,9 +138,6 @@ for IMG in "${IMAGENES[@]}"; do
 
 done
 
-#echo
-#echo "Resumen de etiquetas principales:"
-#jq -r 'to_entries[] | "\(.key): \(.value | length) imagen(es)"' "$ETIQUETAS_JSON" | sort
 
 echo
 echo "Proceso completado. JSONs generados correctamente."
