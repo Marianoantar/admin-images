@@ -138,6 +138,5 @@ for IMG in "${IMAGENES[@]}"; do
 
 done
 
-
 echo
 echo "Proceso completado. JSONs generados correctamente."

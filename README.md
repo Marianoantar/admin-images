@@ -6,11 +6,12 @@ Aquí puede leerse el [enunciado](docs/enunciado.md) del trabajo.
 
 ## Instrucciones
 
-Clone el repositorio
-
+Clonar el repositorio
+Para clonar ell ropositorio es necesario tener instalado, ademas de git, Git LFS. Ya que se usa para archivos largos momo el modelo de Yolo.
+Instalacion:
 ```bash
-   git clone https://gitlab.com/agarciawilliner/tpentorno2025.git
-   cd tpentorno2025
+   sudo apt install git-lfs
+   git lfs install
 ```
 ### Dependencias
 
