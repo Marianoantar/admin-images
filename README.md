@@ -6,9 +6,10 @@ Aquí puede leerse el [enunciado](docs/enunciado.md) del trabajo.
 
 ## Instrucciones
 
-Clonar el repositorio
-Para clonar ell ropositorio es necesario tener instalado, ademas de git, Git LFS. Ya que se usa para archivos largos momo el modelo de Yolo.
-Instalacion:
+Clonar el repositorio.
+
+Es necesario tener instalado, ademas de git, Git LFS. Ya que se usa para archivos largos momo el modelo de Yolo.
+Instalacion de Git LFS:
 ```bash
    sudo apt install git-lfs
    git lfs install
